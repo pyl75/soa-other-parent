@@ -1,0 +1,6 @@
+完成一个spring自定义配置一般需要以下五个步骤：
+1.设计配置属性和JavaBean
+2.编写XSD文件全称XML Schema 它就是校验XML，定义了一些列的语法来规范XML
+3.编写NamespaceHandler和BeanDefinitionParser完成解析工作
+4.编写spring.handlers和spring.schema串联起所有部件
+5.在bean文件中引用
