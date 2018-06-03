@@ -1,0 +1,66 @@
+ServiceBean.onApplicationEvent
+-->export
+     -->ServiceConfig.export
+          -->doExport
+              -->doExportUrls
+                    -->loadRegistries(true) 
+                    -->doExportUrlsFor1Protocol
+                         -->exportLocal
+                              -->proxyFactory.getInvoker(ref, (Class) interfaceClass, local)
+                              -->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.ProxyFactory.class).getExtension("javassist");
+                                   -->StubProxyFactoryWrapper.getInvoker(proxy, type, url);
+                                        -->proxyFactory.getInvoker(proxy, type, url);
+                                             -->JavassistProxyFactory.getInvoker(T proxy, Class<T> type, URL url)
+                                                  -->Wrapper.getWrapper(com.alibaba.dubbo.demo.provider.DemoServiceImpl.class);
+                                                            -->makeWrapper(Class<?> c)
+                                                        -->new AbstractProxyInvoker<T>(proxy, type, url)
+                    -->protocol.export
+                         -->Protocol$Adaptive.export
+                              -->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension("injvm")
+                                   -->extension.export(arg0);
+                                        -->buildInvokerChain(invoker, Constants.SERVICE_FILTER_KEY, Constants.PROVIDER) //创建8个Filter
+                                        -->ProtocolFilterWrapper.export
+                                             -->InjvmProtocol.export
+                                                  -->return new InjvmExporter<T>(invoker, invoker.getUrl().getServiceKey(), exporterMap);
+                                                  -->目的：exporterMap.put(key, this); //key="com.alibaba.dubbo.demo.DemoService" this = InjvmExporter
+                         //如果配置不是local则暴露为远程服务。（配置为local，则表示指暴露）
+                         -->proxyFactory.getInvoker//原理和本地暴露一样都是为了获取一个Invoker对象
+                         -->protocol.export(wrapperInvoker)
+                              -->Protocol$Adaptive.export(Invoker arg0)
+                                   -->ExtensionLoader.getExtensionLoader(Protocol.class).getExtension("registry")
+                                   -->extension.export(arg0);
+                                        -->ProtocolFilterWrapper.export
+                                             -->ProtocolListenerWrapper.export  //没有添加过滤器与监听器
+                                                  -->RegistryProtocol.export
+                                                       -->doLocalExport(originInvoker)
+                                                            -->getCacheKey(originInvoker)//读取缓存【key】
+                                                            -->protocol.export(invokerDelegete)
+                                                                 -->Protocol$Adaptive.export
+                                                                      -->ExtensionLoader.getExtensionLoader(Protocol.class).getExtension("dubbo")
+                                                                      -->extension.export(arg0)
+                                                                           -->ProtocolFilterWrapper.export
+                                                                                -->buildInvokerChain //创建8个filter
+                                                                                -->ProtocolListenerWrapper.export
+                                                                                     -->DubboProtocol.export
+                                                                                          -->serviceKey(url)//组装key=com.alibaba.dubbo.demo.DemoService:20881
+                                                                                          -->目的：exporterMap.put(key, this); //key="com.alibaba.dubbo.demo.DemoService:20881" this = DubboExporter 本地暴露只有接口名远程暴露有接口名和端口号
+                                                                                          -->openServer(url)//打开服务
+                                                                                               -->createServer
+                                                                                                    -->Exchangers.bind(url, requestHandler)//exchanger是一个信息交换层
+                                                                                                         -->getExchanger(url)
+                                                                                                              -->getExchanger("header")
+                                                                                                              -->ExtensionLoader.getExtensionLoader(Exchanger.class).getExtension("header")
+                                                                                                         -->HeaderExchanger.bind
+                                                                                                              -->Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler)))
+                                                                                                                   -->new HeaderExchangeHandler(handler) //仅仅是this.handler = handler;
+                                                                                                                   -->new DecodeHandler
+                                                                                                                        -->AbstractChannelHandlerDelegate//this.handler = handler;
+                                                                                                                   -->Transporters.bind
+                                                                                                                        -->getTransporter()
+                                                                                                                             -->ExtensionLoader.getExtensionLoader(Transporter.class).getAdaptiveExtension()
+                                                                                                                        -->Transporter$Adaptive.bind
+                                                                                                                             -->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.remoting.Transporter.class).getExtension("netty")
+                                                                                                                             -->NettyTransporter.bind
+                                                                                                                                  -->new NettyServer(url, listener)
+                                                                                                                                       -->AbstractPeer     //this.url = url; this.handler = handler;
+                                                                                                                                       -->AbstractEndpoint //codec timeout=1000 connectTimeout=3000
