@@ -17,6 +17,7 @@
         <module>soa-other-dubbo-schema</module>
         <module>soa-other-dubbo-spi</module>
         <module>soa-other-netty</module>
+        <module>soa-other-zk</module>
     </modules>
     <dependencies>
         <dependency>
