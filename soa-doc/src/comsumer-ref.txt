@@ -1,0 +1,29 @@
+ReferenceBean.getObject
+	-->ReferenceConfig.get
+		-->init
+			-->createProxy(map)
+				-->refprotocol.refer(interfaceClass, urls.get(0)))
+					-->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension("registry")
+					-->extension.refer(arg0, arg1)
+						-->ProtocolFilterWrapper.refer
+							-->ProtocolListenerWrapper.refer
+								-->RegistryProtocol.refer
+									-->registryFactory.getRegistry(url) //建立zk的连接和服务端发布一样（省略代码）
+									-->doRefer(cluster, registry, type, url)
+										-->registry.register //创建zk的节点，和服务端法不一样（省略代码）节点名为：/dubbo/com.alibaba.dubbo.demo.DemoService/consumers/consumer%3A%2F%2F192.168.0.1%2Fcom.alibaba.dubbo.demo.DemoService%3Fapplication%3Ddemo-consumer%26category%3Dconsumers%26check%3Dfalse%26dubbo%3D2.0.0%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D5348%26qos.port%3D33333%26side%3Dconsumer%26timestamp%3D1528192687260
+										-->registry.subscribe//订阅zk的节点，和服务端法不一样（省略代码）订阅的内容 0 = "/dubbo/com.alibaba.dubbo.demo.DemoService/providers"
+																	1 = "/dubbo/com.alibaba.dubbo.demo.DemoService/configurators"
+																	2 = "/dubbo/com.alibaba.dubbo.demo.DemoService/routers"
+											-->FailbackRegistry.notify(url, listener, urls);
+												-->doNotify(url, listener, urls)
+													-->AbstractRegistry.notify
+														-->saveProperties(url);//把服务端的注册url信息更新到C:\Users\pengyunlong\.dubbo\dubbo-registry-demo-provider-47.94.102.25:2181.cache
+															-->registryCacheExecutor.execute(new SaveProperties(version));//采用线程池来处理
+														-->listener.notify(categoryList)
+															-->RegistryDirectory.notify
+																-->refreshInvoker(invokerUrls);//刷新缓存中的invoker列表
+																	-->destroyUnusedInvokers(oldUrlInvokerMap, newUrlInvokerMap); //关闭未使用的Invoker
+																	-->最终目的：刷新Map<String, Invoker<T>> map对象this.urlInvokerMap = newUrlInvokerMap
+										-->cluster.join(directory)//加入集群路由表
+											-->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.cluster.Cluster.class).getExtension("failover")
+														

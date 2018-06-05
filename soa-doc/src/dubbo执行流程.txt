@@ -1,28 +1,37 @@
+
+暴露本地服务和暴露远程服务的区别是什么
+1.暴露本地服务：指暴露在一个JVM里面，不用通过调用ZK来进行远程通信。例如：在同一个服务，在自己调用自己的接口，就没必要进行网络IP连接来通信
+2.暴露远程服务：指暴露给远程客户端的IP和端口号，通过网络来实现通信。
+zk的持久化节点和临时节点有审核区别？
+持久化节点：一旦被创建，除非主动删除掉否则就一直存储在ZK里面。
+临时节点：与客户端会话绑定，一旦客户端会话失效，这个客户端创建的所有临时节点都会被删除。
+
 ServiceBean.onApplicationEvent
 -->export
      -->ServiceConfig.export
           -->doExport
-              -->doExportUrls
-                    -->loadRegistries(true) 
-                    -->doExportUrlsFor1Protocol
-                         -->exportLocal
-                              -->proxyFactory.getInvoker(ref, (Class) interfaceClass, local)
-                              -->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.ProxyFactory.class).getExtension("javassist");
-                                   -->StubProxyFactoryWrapper.getInvoker(proxy, type, url);
-                                        -->proxyFactory.getInvoker(proxy, type, url);
-                                             -->JavassistProxyFactory.getInvoker(T proxy, Class<T> type, URL url)
-                                                  -->Wrapper.getWrapper(com.alibaba.dubbo.demo.provider.DemoServiceImpl.class);
-                                                            -->makeWrapper(Class<?> c)
-                                                        -->new AbstractProxyInvoker<T>(proxy, type, url)
-                    -->protocol.export
-                         -->Protocol$Adaptive.export
-                              -->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension("injvm")
-                                   -->extension.export(arg0);
-                                        -->buildInvokerChain(invoker, Constants.SERVICE_FILTER_KEY, Constants.PROVIDER) //创建8个Filter
-                                        -->ProtocolFilterWrapper.export
-                                             -->InjvmProtocol.export
-                                                  -->return new InjvmExporter<T>(invoker, invoker.getUrl().getServiceKey(), exporterMap);
-                                                  -->目的：exporterMap.put(key, this); //key="com.alibaba.dubbo.demo.DemoService" this = InjvmExporter
+            -->doExportUrls//里面有一个for循环，代表一个服务可以有多个通信协议，例如tcp http协议，默认是tcp协议
+               -->loadRegistries(true) //从dubbo.properties里面组装registry的url信息
+               -->doExportUrlsFor1Protocol
+			//配置不是remote的情况加做本地暴露（配置为remote，则表示只暴露远程服务）
+			 -->exportLocal
+			    -->proxyFactory.getInvoker(ref, (Class) interfaceClass, local)
+				      -->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.ProxyFactory.class).getExtension("javassist");
+					   -->StubProxyFactoryWrapper.getInvoker(proxy, type, url);
+						-->proxyFactory.getInvoker(proxy, type, url);
+						     -->JavassistProxyFactory.getInvoker(T proxy, Class<T> type, URL url)
+							  -->Wrapper.getWrapper(com.alibaba.dubbo.demo.provider.DemoServiceImpl.class);
+								    -->makeWrapper(Class<?> c)
+								-->new AbstractProxyInvoker<T>(proxy, type, url)
+			    -->protocol.export
+				 -->Protocol$Adaptive.export
+				      -->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension("injvm")
+					   -->extension.export(arg0);
+						-->buildInvokerChain(invoker, Constants.SERVICE_FILTER_KEY, Constants.PROVIDER) //创建8个Filter
+						-->ProtocolFilterWrapper.export
+						     -->InjvmProtocol.export
+							  -->return new InjvmExporter<T>(invoker, invoker.getUrl().getServiceKey(), exporterMap);
+							  -->目的：exporterMap.put(key, this); //key="com.alibaba.dubbo.demo.DemoService" this = InjvmExporter
                          //如果配置不是local则暴露为远程服务。（配置为local，则表示指暴露）
                          -->proxyFactory.getInvoker//原理和本地暴露一样都是为了获取一个Invoker对象
                          -->protocol.export(wrapperInvoker)
@@ -77,4 +86,89 @@ ServiceBean.onApplicationEvent
                                                        		-->ExtensionLoader.getExtensionLoader(RegistryFactory.class).getExtension("zookeeper")
                                                        		-->extension.getRegistry(arg0)
                                                        			-->AbstractRegistryFactory.getRegistry //创建一个注册中心存储在REGISTRIES
-                                                       			-->createRegistry(url)
+                                                       				-->createRegistry(url)
+											-->new ZookeeperRegistry(url, zookeeperTransporter);
+												-->AbstractRegistry
+													-->loadProperties//目的：把 C:\Users\pengyunlong/.dubbo/dubbo-registry-demo-provider-47.94.102.25:2181.cache
+																文件中的内容加载为properties
+													-->notify(url.getBackupUrls())//不做任何事情
+												-->FailbackRegistry
+													-->retryExecutor.scheduleWithFixedDelay(new Runnable())//建立线程池，检测并连接注册中心如果失败了就重连
+												-->ZookeeperRegistry
+													-->zookeeperTransporter.connect(url)
+														-->ZookeeperTransporter$Adaptive.connect(url)
+															-->ExtensionLoader.getExtensionLoader(ZookeeperTransporter.class).getExtension("curator");
+															-->CuratorZookeeperTransporter.connect(arg0)
+																-->new CuratorZookeeperClient(url)
+																	-->AbstractZookeeperClient
+																	-->CuratorZookeeperClient
+																		-->CuratorFrameworkFactory.builder().connectString(url.getBackupAddress()).retryPolicy(new RetryNTimes(1, 1000)).connectionTimeoutMs(5000)//连接zk
+																		-->client.getConnectionStateListenable().addListener(new ConnectionStateListener()//订阅的目的：连接断开，重连
+														-->zkClient.addStateListener(new StateListener())
+															-->recover()//连接失败 重连
+                                                       -->registry.register(registedProviderUrl) //创建节点
+								-->AbstractRegistry.register
+								-->FailbackRegistry.register(url)
+									-->doRegister//向服务器zk发送注册请求
+										-->ZookeeperRegistry.doRegister
+											-->zkClient.create
+												-->AbstractZookeeperClient.create // /dubbo/com.alibaba.dubbo.demo.DemoService/providers/
+																	dubbo%3A%2F%2F192.168.0.1%3A20881%2Fcom.alibaba.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26
+																	application%3Ddemo-provider%26dispatcher%3Dexecution%26dubbo%3D2.0.0%26generic%3Dfalse%26interface%3D
+																	com.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D14604%26side%3Dprovider%26threadpool%3Dcached%26threads%3D5%26timestamp%3D1528165817294
+													-->createEphemeral(path); //临时节点 dubbo%3A%2F%2F192.168.0.1%3A20881%2Fcom.alibaba.dubbo...
+													-->createPersistent(path)；//持久化节点/dubbo/com.alibaba.dubbo.demo.DemoService/providers/
+                                                       
+						       -->registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener) //订阅ZK
+								-->AbstractRegistry.subscribe
+								-->FailbackRegistry.subscribe
+									-->doSubscribe(url, listener) //向服务端发送订阅请求
+										-->ZookeeperRegistry.doSubscribe
+											-->new ChildListener()
+												-->实现了childChanged
+													-->实现并执行ZookeeperRegistry.this.notify(url, listener, toUrlsWithEmpty(url, parentPath, currentChilds));
+											
+											//A
+											-->zkClient.create(path, false);//第一步：先创建持久化节点/dubbo/com.alibaba.dubbo.demo.DemoService/configurators
+											-->zkClient.addChildListener(path, zkListener)
+												-->AbstractZookeeperClient.addChildListener
+
+													//C
+													-->createTargetChildListener//第三步：收到订阅后的处理，交给FailbackRegistry.notify
+														-->ZkclientZookeeperClient.createTargetChildListener(path, listener)
+															-->new IZkChildListener
+																-->实现了handleChildChange// 收到订阅后的处理处理
+																	-->listener.childChanged(parentPath, currentChilds)
+																	-->实现并执行了订阅ZookeeperRegistry.this.notify(url, listener, toUrlsWithEmpty(url, parentPath, currentChilds));
+																	-->收到订阅后处理FailbackRegistry.notify
+													//B
+													-->addTargetChildListener //第二步
+														-->ZkclientZookeeperClient.addTargetChildListener
+															-->client.subscribeChildChanges(path, listener)//第二步：启动加入订阅
+											-->notify(url, listener, urls)
+												-->FailbackRegistry.notify
+													-->doNotify(url, listener, urls);
+														-->AbstractRegistry.notify
+															-->saveProperties(url);//把服务端的注册url信息更新到C:\Users\pengyunlong\.dubbo\dubbo-registry-demo-provider-47.94.102.25:2181.cache
+																-->registryCacheExecutor.execute(new SaveProperties(version));//采用线程池来处理
+															-->RegistryProtocol.notify
+																-->RegistryProtocol.this.getProviderUrl(invoker) //通过invoker的url 获取providerUrl的地址
+																
+																
+																
+																
+																
+																
+																
+																
+																
+																
+																
+																
+																
+																
+																
+																
+																
+																
+																
