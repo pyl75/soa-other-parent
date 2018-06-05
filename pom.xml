@@ -18,6 +18,7 @@
         <module>soa-other-dubbo-spi</module>
         <module>soa-other-netty</module>
         <module>soa-other-zk</module>
+        <module>soa-other-dubbo-adaptive</module>
     </modules>
     <dependencies>
         <dependency>
