@@ -41,12 +41,12 @@ ServiceBean.onApplicationEvent
                                                                            -->ProtocolFilterWrapper.export
                                                                                 -->buildInvokerChain //创建8个filter
                                                                                 -->ProtocolListenerWrapper.export
-                                                                                     -->DubboProtocol.export
+--------1.netty服务暴露的开始-----                                                  -->DubboProtocol.export
                                                                                           -->serviceKey(url)//组装key=com.alibaba.dubbo.demo.DemoService:20881
                                                                                           -->目的：exporterMap.put(key, this); //key="com.alibaba.dubbo.demo.DemoService:20881" this = DubboExporter 本地暴露只有接口名远程暴露有接口名和端口号
                                                                                           -->openServer(url)//打开服务
                                                                                                -->createServer
-                                                                                                    -->Exchangers.bind(url, requestHandler)//exchanger是一个信息交换层
+--------2.信息交换层的开始---                                                                        -->Exchangers.bind(url, requestHandler)//exchanger是一个信息交换层
                                                                                                          -->getExchanger(url)
                                                                                                               -->getExchanger("header")
                                                                                                               -->ExtensionLoader.getExtensionLoader(Exchanger.class).getExtension("header")
@@ -55,7 +55,7 @@ ServiceBean.onApplicationEvent
                                                                                                                    -->new HeaderExchangeHandler(handler) //仅仅是this.handler = handler;
                                                                                                                    -->new DecodeHandler
                                                                                                                         -->AbstractChannelHandlerDelegate//this.handler = handler;
-                                                                                                                   -->Transporters.bind
+--------3.网络传输层--------                                                                                       -->Transporters.bind
                                                                                                                         -->getTransporter()
                                                                                                                              -->ExtensionLoader.getExtensionLoader(Transporter.class).getAdaptiveExtension()
                                                                                                                         -->Transporter$Adaptive.bind
@@ -64,3 +64,17 @@ ServiceBean.onApplicationEvent
                                                                                                                                   -->new NettyServer(url, listener)
                                                                                                                                        -->AbstractPeer     //this.url = url; this.handler = handler;
                                                                                                                                        -->AbstractEndpoint //codec timeout=1000 connectTimeout=3000
+--------4.打开端口暴露服务---                                                                                                         --doOpen()
+                                                                                                                                       	-->设置NioServerSocketChannelFactory boss worker线程个数为3
+                                                                                                                                       	-->设置编解码handler
+                                                                                                                                       	-->bootstrap.bind(getBindAddress())
+                                                                                                                   -->new HeaderExchangeServer
+                                                                                                                   		-->this.server = NettyServer
+                                                                                                                   		-->this.heartbeat=60000
+                                                                                                                   		-->heartbeatTimeout=180000
+                                                                                                                   			-->startHeatbeatTimer//这是一个心跳定时器，采用了线程池，如果断开就心跳重连
+                                                       -->getRegistryUrl(originInvoker)//zk连接
+                                                       		-->ExtensionLoader.getExtensionLoader(RegistryFactory.class).getExtension("zookeeper")
+                                                       		-->extension.getRegistry(arg0)
+                                                       			-->AbstractRegistryFactory.getRegistry //创建一个注册中心存储在REGISTRIES
+                                                       			-->createRegistry(url)
