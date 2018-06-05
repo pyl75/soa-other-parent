@@ -1,3 +1,17 @@
+服务发布-原理
+第一个发布动作:暴露本地服务
+    [DUBBO] Export dubbo service com.alibaba.dubbo.demo.DemoService to local registry, dubbo version: 2.0.0, current host: 169.254.23.23
+第二个发布动作:暴露远程服务
+    [DUBBO] Export dubbo service com.alibaba.dubbo.demo.DemoService to url dubbo://169.254.23.23:20881/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&bind.ip=169.254.23.23&bind.port=20881&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&loadbalance=roundrobin&methods=sayHello&owner=wliliam&pid=10948&qos.port=22222&side=provider&timestamp=1527390445523, dubbo version: 2.0.0, current host: 169.254.23.23
+    [DUBBO] Register dubbo service com.alibaba.dubbo.demo.DemoService url dubbo://169.254.23.23:20881/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&bind.ip=169.254.23.23&bind.port=20881&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&loadbalance=roundrobin&methods=sayHello&monitor=dubbo%3A%2F%2F47.94.102.25%3A7070%3Fdubbo%3D2.0.0%26interface%3Dcom.alibaba.dubbo.monitor.MonitorService%26pid%3D10948%26timestamp%3D1527390445912&owner=wliliam&pid=10948&qos.port=22222&side=provider&timestamp=1527390445523 to registry registry://47.94.102.25:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0&owner=wliliam&pid=10948&qos.port=22222&registry=zookeeper&timestamp=1527390445496, dubbo version: 2.0.0, current host: 169.254.23.23
+第三个发布动作：启动netty
+    [DUBBO] Start NettyServer bind /0.0.0.0:20881, export /169.254.23.23:20881, dubbo version: 2.0.0, current host: 169.254.23.23
+第四个发布动作：打开连接zk
+    INFO zookeeper.ClientCnxn: Opening socket connection to server 47.94.102.25/47.94.102.25:2181. Will not attempt to authenticate using SASL (unknown error)
+第五个发布动作：到zk注册
+    [DUBBO] Register: dubbo://169.254.23.23:20881/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&loadbalance=roundrobin&methods=sayHello&owner=wliliam&pid=10948&side=provider&timestamp=1527390445523, dubbo version: 2.0.0, current host: 169.254.23.23
+第六个发布动作：监听zk
+    [DUBBO] Subscribe: provider://169.254.23.23:20881/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&category=configurators&check=false&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&loadbalance=roundrobin&methods=sayHello&owner=wliliam&pid=10948&side=provider&timestamp=1527390445523, dubbo version: 2.0.0, current host: 169.254.23.23
 
 暴露本地服务和暴露远程服务的区别是什么
 1.暴露本地服务：指暴露在一个JVM里面，不用通过调用ZK来进行远程通信。例如：在同一个服务，在自己调用自己的接口，就没必要进行网络IP连接来通信
