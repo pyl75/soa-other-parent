@@ -8,22 +8,36 @@ ReferenceBean.getObject
 						-->ProtocolFilterWrapper.refer
 							-->ProtocolListenerWrapper.refer
 								-->RegistryProtocol.refer
-									-->registryFactory.getRegistry(url) //½¨Á¢zkµÄÁ¬½ÓºÍ·þÎñ¶Ë·¢²¼Ò»Ñù£¨Ê¡ÂÔ´úÂë£©
+									-->registryFactory.getRegistry(url) //å»ºç«‹zkçš„è¿žæŽ¥å’ŒæœåŠ¡ç«¯å‘å¸ƒä¸€æ ·ï¼ˆçœç•¥ä»£ç ï¼‰
 									-->doRefer(cluster, registry, type, url)
-										-->registry.register //´´½¨zkµÄ½Úµã£¬ºÍ·þÎñ¶Ë·¨²»Ò»Ñù£¨Ê¡ÂÔ´úÂë£©½ÚµãÃûÎª£º/dubbo/com.alibaba.dubbo.demo.DemoService/consumers/consumer%3A%2F%2F192.168.0.1%2Fcom.alibaba.dubbo.demo.DemoService%3Fapplication%3Ddemo-consumer%26category%3Dconsumers%26check%3Dfalse%26dubbo%3D2.0.0%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D5348%26qos.port%3D33333%26side%3Dconsumer%26timestamp%3D1528192687260
-										-->registry.subscribe//¶©ÔÄzkµÄ½Úµã£¬ºÍ·þÎñ¶Ë·¨²»Ò»Ñù£¨Ê¡ÂÔ´úÂë£©¶©ÔÄµÄÄÚÈÝ 0 = "/dubbo/com.alibaba.dubbo.demo.DemoService/providers"
+										-->registry.register //åˆ›å»ºzkçš„èŠ‚ç‚¹ï¼Œå’ŒæœåŠ¡ç«¯æ³•ä¸ä¸€æ ·ï¼ˆçœç•¥ä»£ç ï¼‰èŠ‚ç‚¹åä¸ºï¼š/dubbo/com.alibaba.dubbo.demo.DemoService/consumers/consumer%3A%2F%2F192.168.0.1%2Fcom.alibaba.dubbo.demo.DemoService%3Fapplication%3Ddemo-consumer%26category%3Dconsumers%26check%3Dfalse%26dubbo%3D2.0.0%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D5348%26qos.port%3D33333%26side%3Dconsumer%26timestamp%3D1528192687260
+										-->registry.subscribe//è®¢é˜…zkçš„èŠ‚ç‚¹ï¼Œå’ŒæœåŠ¡ç«¯æ³•ä¸ä¸€æ ·ï¼ˆçœç•¥ä»£ç ï¼‰è®¢é˜…çš„å†…å®¹ 0 = "/dubbo/com.alibaba.dubbo.demo.DemoService/providers"
 																	1 = "/dubbo/com.alibaba.dubbo.demo.DemoService/configurators"
 																	2 = "/dubbo/com.alibaba.dubbo.demo.DemoService/routers"
 											-->FailbackRegistry.notify(url, listener, urls);
 												-->doNotify(url, listener, urls)
 													-->AbstractRegistry.notify
-														-->saveProperties(url);//°Ñ·þÎñ¶ËµÄ×¢²áurlÐÅÏ¢¸üÐÂµ½C:\Users\pengyunlong\.dubbo\dubbo-registry-demo-provider-47.94.102.25:2181.cache
-															-->registryCacheExecutor.execute(new SaveProperties(version));//²ÉÓÃÏß³Ì³ØÀ´´¦Àí
+														-->saveProperties(url);//æŠŠæœåŠ¡ç«¯çš„æ³¨å†Œurlä¿¡æ¯æ›´æ–°åˆ°C:\Users\pengyunlong\.dubbo\dubbo-registry-demo-provider-47.94.102.25:2181.cache
+															-->registryCacheExecutor.execute(new SaveProperties(version));//é‡‡ç”¨çº¿ç¨‹æ± æ¥å¤„ç†
 														-->listener.notify(categoryList)
 															-->RegistryDirectory.notify
-																-->refreshInvoker(invokerUrls);//Ë¢ÐÂ»º´æÖÐµÄinvokerÁÐ±í
-																	-->destroyUnusedInvokers(oldUrlInvokerMap, newUrlInvokerMap); //¹Ø±ÕÎ´Ê¹ÓÃµÄInvoker
-																	-->×îÖÕÄ¿µÄ£ºË¢ÐÂMap<String, Invoker<T>> map¶ÔÏóthis.urlInvokerMap = newUrlInvokerMap
-										-->cluster.join(directory)//¼ÓÈë¼¯ÈºÂ·ÓÉ±í
+																-->refreshInvoker(invokerUrls);//åˆ·æ–°ç¼“å­˜ä¸­çš„invokeråˆ—è¡¨
+																	-->destroyUnusedInvokers(oldUrlInvokerMap, newUrlInvokerMap); //å…³é—­æœªä½¿ç”¨çš„Invoker
+																	-->æœ€ç»ˆç›®çš„ï¼šåˆ·æ–°Map<String, Invoker<T>> mapå¯¹è±¡this.urlInvokerMap = newUrlInvokerMap
+										-->cluster.join(directory)//åŠ å…¥é›†ç¾¤è·¯ç”±è¡¨
 											-->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.cluster.Cluster.class).getExtension("failover")
-														
+												-->MockClusterWrapper.join
+													-->this.cluster.join(directory)
+														-->return new FailoverClusterInvoker<T>(directory)
+															-->new MockClusterInvoker
+				-->proxyFactory.getProxy(invoker)//åˆ›å»ºæœåŠ¡ä»£ç†
+					-->ProxyFactory$Adaptive.getProxy
+						-->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.ProxyFactory.class).getExtension("javassist")
+						-->extension.getProxy(arg0)
+							-->StubProxyFactoryWrapper.getProxy
+								-->proxyFactory.getProxy(invoker)
+									-->AbstractProxyFactory.getProxy
+										-->JavassistProxyFactory.getProxy
+											-->Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker)) //ç›®æ ‡ä»£ç†å¯¹è±¡com.alibaba.dubbo.demo.DemoServiceï¼Œinterface com.alibaba.dubbo.rpc.service.EchoService
+											-->InvokerInvocationHandler //é‡‡ç”¨jdkè‡ªå¸¦çš„InvocationHandlerï¼Œåˆ›å»ºInvokerInvocationHandlerå¯¹è±¡
+													 	
