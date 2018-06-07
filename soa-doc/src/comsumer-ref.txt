@@ -23,7 +23,9 @@ ReferenceBean.getObject
 															-->RegistryDirectory.notify
 																-->refreshInvoker(invokerUrls);//刷新缓存中的invoker列表
 																	-->destroyUnusedInvokers(oldUrlInvokerMap, newUrlInvokerMap); //关闭未使用的Invoker
-																	-->最终目的：刷新Map<String, Invoker<T>> map对象this.urlInvokerMap = newUrlInvokerMap
+																	-->最终目的：刷新Map<String, Invoker<T>> map对象
+                                                                    			this.urlInvokerMap = newUrlInvokerMap
+                                                                    			刷新Map<String, List<Invoker<T>>> methodInvokerMap对象
 										-->cluster.join(directory)//加入集群路由表
 											-->ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.cluster.Cluster.class).getExtension("failover")
 												-->MockClusterWrapper.join

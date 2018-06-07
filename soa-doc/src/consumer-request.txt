@@ -1,0 +1,26 @@
+demoService.sayHello("world")
+-->InvokerInvocationHandler.invoke
+	-->invoker.invoke
+		-->RpcInvocation//所有请求参数都会转换为RpcInvocation
+			-->MockClusterInvoker.invoke //1.进入集群
+				-->this.invoker.invoke(invocation)
+					-->AbstractClusterInvoker.invoke(invocation)
+						-->list(invocation)
+							-->directory.list //2.进入目录查找 从this.methodInvokerMap里面查找一个Invoker
+								-->AbstractDirectory.list
+									-->doList(invocation)
+										-->RegistryDirectory.doList //从this.methodInvokerMap里面查找一个Invoker
+									-->router.route //3.进入路由
+										-->MockInvokersSelector.route
+											-->getNormalInvokers
+						-->ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension("random")
+						-->doInvoke
+							-->FailoverClusterInvoker.doInvoke
+								-->select //4.进入负载均衡
+									-->AbstractClusterInvoker.select
+										-->doSelect
+											-->loadbalance.select
+												-->AbstractLoadBalance.select
+													-->doSelect
+														-->RoundRobinLoadBalance.doSelect //随机取模invokers.get(currentSequence % length)
+								-->Result result = invoker.invoke(invocation)
