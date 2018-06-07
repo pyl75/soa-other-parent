@@ -1,5 +1,7 @@
 package com.soa.other.spi;
 
+import com.soa.other.spi.service.Command;
+
 import java.util.ServiceLoader;
 
 /**

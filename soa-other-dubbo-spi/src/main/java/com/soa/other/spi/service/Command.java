@@ -1,8 +1,8 @@
-package com.soa.other.spi;
+package com.soa.other.spi.service;
 
 /**
  * Created by pengyunlong on 2018/5/25.
  */
 public interface Command {
-    public void excute();
+    void excute();
 }
