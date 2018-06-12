@@ -24,3 +24,42 @@ demoService.sayHello("world")
 													-->doSelect
 														-->RoundRobinLoadBalance.doSelect //随机取模invokers.get(currentSequence % length)
 								-->Result result = invoker.invoke(invocation)
+------------------------------------------------扩展点------
+									-->InvokerWrapper.invoke
+										-->ProtocolFilterWrapper.invoke
+											-->RpcContext.getContext()
+												-->ProtocolFilterWrapper.invoke
+													-->MonitorFilter.invoke
+														-->ProtocolFilterWrapper.invoke
+															-->FutureFilter.invoke
+																-->ListenerInvokerWrapper.invoke
+																	-->AbstractInvoker.invoke
+------------------------------------------------扩展点-------
+																		-->doInvoke
+																			-->DubboInvoker.doInvoke//为什么DubboInvoker是个protocol?因为RegistryDirectory.notify.refreshInvoker.toInvokers 
+																				-->currentClient.request
+																					-->ReferenceCountExchangeClient.request
+																						-->HeaderExchangeClient.request
+																							-->HeaderExchangeChannel.request
+																								-->NettyClient.send
+																								-->AbstractPeer.send
+																									-->NettyChannel.send
+																										-->ChannelFuture future = channel.write(message);//最终的目的：通过netty的channel发送网络数据
+
+
+灰度发布例子：
+provider 192.168.100.38	192.168.48.32
+1.发布 192.168.48.32,切断192.168.48.32访问流量，然后进行服务发布
+2.192.168.48.32发布成功后，恢复192.168.48.32的流量，
+3.切断192.168.100.38，继续发布192.168.100.38
+
+2个疑问
+1.启动路由规则，它触发了哪些动作？
+	a.什么时候加入ConditionRouter？ 
+		RegistryDirectory.notify
+	b.ConditionRouter是怎么过滤的
+		RegistryDirectory.notify->refreshInvoker
+2.路由规则有哪些实现类
+ConditionRouter：条件路由，后台管理系统的路由都是条件路由
+ScriptRouter：脚本路由
+MockInvokersSelector
