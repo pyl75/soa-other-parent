@@ -45,6 +45,32 @@ demoService.sayHello("world")
 																								-->AbstractPeer.send
 																									-->NettyChannel.send
 																										-->ChannelFuture future = channel.write(message);//最终的目的：通过netty的channel发送网络数据
+//consumer接收原理
+	NettyHandler.messageReceived
+	-->AbstractPeer.received
+		-->MultiMessageHandler.received
+			-->HeartbeatHandler.received
+				-->ExecutionChannelHandler.received
+					-->ChannelEventRunnable.run //线程池执行线程
+						-->DecodeHandler.received
+							-->HeaderExchangeHandler.received
+								-->handleResponse(channel, (Response) message)
+									-->DefaultFuture.received(channel, response)
+										-->DefaultFuture.doReceived
+										private void doReceived(Response res) {
+											lock.lock();
+											try {
+											    response = res;
+											    if (done != null) {
+												done.signal();
+											    }
+											} finally {
+											    lock.unlock();
+											}
+											if (callback != null) {
+											    invokeCallback(callback);
+											}
+										    }
 
 
 灰度发布例子：
