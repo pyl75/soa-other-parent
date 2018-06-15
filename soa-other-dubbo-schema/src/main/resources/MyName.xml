@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:agan="http://www.springframework.org/schema/agan"
+       xmlns:school="http://www.springframework.org/schema/school"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd
-        http://www.springframework.org/schema/agan
-        http://www.springframework.org/schema/agan/agan.xsd ">
-    <agan:people id="agan" name="阿甘" age="11"></agan:people>
+        http://www.springframework.org/schema/school
+        http://www.springframework.org/schema/school/school.xsd ">
+    <school:people id="testPeople" name="Jack" age="11"></school:people>
 </beans>

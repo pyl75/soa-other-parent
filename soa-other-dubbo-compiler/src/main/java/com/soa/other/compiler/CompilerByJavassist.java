@@ -3,6 +3,8 @@ package com.soa.other.compiler;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -10,6 +12,8 @@ import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Javassist是一款字节码编辑工具,同时也是一个动态类库，它可以直接检查、修改以及创建 Java类。
@@ -17,9 +21,7 @@ import javassist.CtNewMethod;
  * 
  */
 public class CompilerByJavassist {
-
-	public static void main(String[] args) throws Exception {
-
+	public Class createClass() throws Exception{
 		// ClassPool：CtClass对象的容器
 		ClassPool pool = ClassPool.getDefault();
 
@@ -68,17 +70,58 @@ public class CompilerByJavassist {
 		ctMethod.setBody(buffer2.toString());
 		ctClass.addMethod(ctMethod);
 
-		//最好生成一个class
+		//最后生成一个class
 		Class<?> clazz = ctClass.toClass();
-		Object obj = clazz.newInstance();
-		//反射 执行方法
-		obj.getClass().getMethod("printInfo", new Class[] {})
-				.invoke(obj, new Object[] {});
-
 		// 把生成的class文件写入文件
 		byte[] byteArr = ctClass.toBytecode();
 		FileOutputStream fos = new FileOutputStream(new File("E://Emp.class"));
 		fos.write(byteArr);
 		fos.close();
+		return clazz;
+	}
+
+
+	/**
+	 * @Author pengyunlong
+	 * @Description 动态创建
+	 * @param
+	 * @Date 2018/6/15 11:36
+	 */
+	@Test
+	public void testInvoke() throws Exception {
+		Class<?> aClass = null;
+		try {
+			aClass = Class.forName("com.study.javassist.Emp");
+		}catch (ClassNotFoundException ex){
+			aClass = createClass();
+		}
+		Object obj = aClass.newInstance();
+		//反射 执行方法
+		obj.getClass().getMethod("printInfo", new Class[] {})
+				.invoke(obj, new Object[] {});
+	}
+
+	/**
+	 * @Author pengyunlong
+	 * @Description 动态修改类,只能修改还未加载的类
+	 * @param
+	 * @Date 2018/6/15 11:36
+	 */
+	@Test
+	public void testModify() throws Exception {
+		CtClass ctClass = ClassPool.getDefault().get("com.soa.other.compiler.Emp");
+		CtMethod method = ctClass.getDeclaredMethod("printInfo");
+		method.setBody("System.out.println(\"New method!\");");
+		ctClass.toClass();
+		Emp emp = new Emp();
+		emp.printInfo();
+	}
+
+	@Test
+	public void testLoaderDir() throws Exception {
+		URLClassLoader urlClassLoader = (URLClassLoader)ClassLoader.getSystemClassLoader();
+		for (URL url:urlClassLoader.getURLs()) {
+			System.out.println(url.toString());
+		}
 	}
 }

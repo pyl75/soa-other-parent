@@ -14,7 +14,7 @@ public class App
     public static void main( String[] args )
     {
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("MyName.xml");
-        People people = (People) context.getBean("agan");
+        People people = (People) context.getBean("testPeople");
         System.out.println(people.toString());
     }
 }
